@@ -1,0 +1,6 @@
+[theme]
+primaryColor = "#FF6F61"            # Coral accent for buttons/sliders
+backgroundColor = "#121212"         # Near black main background
+secondaryBackgroundColor = "#1E1E1E" # Slightly lighter sidebar/cards
+textColor = "#E0E0E0"               # Light gray text
+font = "monospace"                  
