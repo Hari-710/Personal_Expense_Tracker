@@ -1,5 +1,6 @@
 import mysql.connector
 import bcrypt
+import pandas as pd
 
 def get_connection():
     return mysql.connector.connect(
@@ -124,15 +125,16 @@ def fetch_month_budget(username, month):
     else:
         return None
 
-def fetch_expense_id(username):
+def fetch_expense_for_delete(username):
     user_id = get_user_id(username)
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT expense_id FROM expenses WHERE user_id = %s", (user_id,))
+    cursor.execute("SELECT expense_id, category, amount, date FROM expenses WHERE user_id = %s ORDER BY date DESC", (user_id,))
     rows = cursor.fetchall()
     cursor.close()
     conn.close()
-    return [row[0] for row in rows]
+    df = pd.DataFrame(rows, columns=['expense_id', 'category', 'amount','date'])
+    return df
 
 def delete_expense(username, expense_id):
     user_id = get_user_id(username)

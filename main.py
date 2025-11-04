@@ -268,15 +268,37 @@ if st.session_state.logged_in:
                 st.warning("Check the input format")
 
     elif action == "Delete Expenses":
-        expense_ids = db.fetch_expense_id(st.session_state.username)
-        selected_id = st.selectbox("Choose Expense ID to delete:", expense_ids)
-        if st.button("Delete Expense",type="primary"):
-            if selected_id:
-                if db.delete_expense(st.session_state.username, selected_id):
-                    st.success(f"Expense id {selected_id} of the user {st.session_state.username}")
-                    time.sleep(2)
-                    st.rerun()
-            else:
-                st.warning("Select ID to delete")  
+        expenses = db.fetch_expense_for_delete(st.session_state.username)
+
+        if not expenses.empty:
+            df = pd.DataFrame(expenses)
+            df['label'] = df.apply(
+                lambda row: f"{row['category']} - Rs.{row['amount']} on {row['date']}", axis=1
+            )
+
+            selected_label = st.selectbox("Select Expense to Delete", df['label'])
+            selected_id = df.loc[df['label'] == selected_label, "expense_id"].values[0]
+
+            if st.button("Delete Expense", type="primary"):
+                st.session_state.show_confirm_box = True
+
+            if st.session_state.get("show_confirm_box",False):
+                st.warning(f"Are you sure want to delete this expense?\n\n {selected_label}")
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    if st.button("Yes, Delete", key="confirm_delete"):
+                        if db.delete_expense(st.session_state.username, int(selected_id)):
+                            st.success(f"Deleted: {selected_label}")
+                            st.session_state.show_confirm_box = False
+                        else:
+                            st.error("Expense Not Found")
+                    
+                with col2:
+                    if st.button("Cance", key="cancel_delete"):
+                        st.info("Deletion Cancelled")
+                        st.session_state.show_confirm_box = False
+        else:
+            st.info("No expenses found to Delete.")
 
               
