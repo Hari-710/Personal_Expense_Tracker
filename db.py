@@ -51,12 +51,12 @@ def get_user_id(username):
     conn.close()
     return result[0] if result else None
 
-def insert_budget(username, month, amount):
+def insert_budget(username, month, amount, limit_amount):
     user_id = get_user_id(username)
     if user_id:
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO budgets (user_id, month, amount) VALUES (%s, %s, %s)", (user_id, month, amount))
+        cursor.execute("INSERT INTO budgets (user_id, month, amount, limit_amount) VALUES (%s, %s, %s, %s)", (user_id, month, amount, limit_amount))
         conn.commit()
         cursor.close()
         conn.close()
@@ -73,7 +73,6 @@ def fetch_budgets(username):
         conn.close()
         return rows
     
-
 def check_month(username, month):
     user_id = get_user_id(username)
     if user_id:
@@ -112,16 +111,27 @@ def fetch_expenses(username, month):
     else:
         return None
     
+def fetch_categories(username, category):
+    user_id = get_user_id(username)
+    if user_id:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("select date, category, amount, payment_mode from expenses where user_id = %s and category = %s", (user_id, category))
+        cat = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return cat
+    
 def fetch_month_budget(username, month):
     user_id = get_user_id(username)
     if user_id:
         conn = get_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT amount FROM budgets WHERE user_id = %s and month = %s", (user_id, month))
+        cursor.execute("SELECT amount, limit_amount FROM budgets WHERE user_id = %s and month = %s", (user_id, month))
         am = cursor.fetchone()
         cursor.close()
         conn.close()
-        return am[0]
+        return am[0],am[1]
     else:
         return None
 
