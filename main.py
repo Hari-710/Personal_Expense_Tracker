@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 import streamlit as st
+import calendar
+from datetime import datetime
+from streamlit_option_menu import option_menu
 import matplotlib.pyplot as plt
 from decimal import Decimal
 import time
@@ -16,8 +19,12 @@ if "logged_in" not in st.session_state:
 
 
 with st.sidebar:
-    st.write("Use drop down to login and register")
-    choice = st.sidebar.selectbox("Registrations:", ["Login", "Register"])
+    choice = option_menu(
+        menu_title=None,
+        options=["Login", "Register"],
+        icons=["person-check","person-add"],
+        orientation="horizontal"
+    )
     if choice == "Login":
         username = st.text_input("Username", key="login_username")
         password = st.text_input("Password",type="password", key="login_password")
@@ -54,18 +61,24 @@ elif st.session_state.logged_in:
             st.session_state.username = None
 
             st.success("Logged out Successfully")
-            st.rerun()
             time.sleep(2)
+            st.rerun()
 
     st.title("Personal Finance Expenses Tracker")
-    st.text("Managing your money is the first step towards financial freedom. This app helps you track, analyze, and control your expenses in a simple and effective way.")
-    action = st.selectbox("Action",["Set budget", "View Budgets", "Add Expenses", "View Expenses", "Delete Expenses"])
+    st.text("Managing your money is the first step towards financial freedom. This app helps you track, analyze, and control your expenses in a simple and effective way.", width="stretch")
 
+    action = option_menu(
+        menu_title = None,
+        options=["Set budget", "View Budgets", "Add Expenses", "View Expenses", "Delete Expenses"],
+        icons=["cash","cash-coin","currency-rupee","wallet","cash-stack"],
+        orientation="horizontal"
+    )
+    
     if action == "Set budget":
         st.subheader("Setting up budget..")
         st.info("Sample for view expenses input.. (2025-09)")
         year_month = st.text_input("YYYY-MM")
-        amount = st.number_input("Amount")
+        amount = st.number_input("Amount", min_value=0, format="%i", step=10)
         limit_amount = st.number_input("Amount Limit")
         if st.button("Add Budget",type="primary"):
             if '-' in year_month:
@@ -74,10 +87,10 @@ elif st.session_state.logged_in:
                 else:
                     st.warning("Fill all the details")
             else:
-                st.warning("Enter in the correct format")
+                st.warning("Enter correct format in the YYYY-MM field")
     
     elif action == "View Budgets":
-        st.subheader(f"Budget of {st.session_state.username}")
+        st.subheader(f"Allocated Budget of {st.session_state.username} for months")
         if st.button("View Budget", type="primary"):
             budgets = db.fetch_budgets(st.session_state.username)
             if budgets:
@@ -90,7 +103,7 @@ elif st.session_state.logged_in:
         st.subheader("Adding Expenses..")
         date = st.date_input("Date")
         category = st.selectbox("Category",["Food","Travel","Bills","Entertainment","Medical","Groceries","Savings","Personal care", "School/college Fees"])
-        amount = st.number_input("Amount")
+        amount = st.number_input("Amount", format="%i", step=10)
         payment_mode = st.selectbox("Payment_Type",["Cash","Card","UPI"])
         year_month = date.strftime("%Y-%m")
 
@@ -126,7 +139,12 @@ elif st.session_state.logged_in:
 
     elif action == "View Expenses":
         st.subheader(f"Expenses of {st.session_state.username}")
-        exp_option = st.radio("Choose",["Category-Wise Expenses","Month-Wise Expenses"])
+        exp_option = option_menu(
+            menu_title=None,
+            options=["Category-Wise Expenses","Month-Wise Expenses"],
+            icons=["coin","currency-dollar"],
+            orientation="horizontal"
+        )
         if exp_option == "Month-Wise Expenses":
             st.info("Sample for view expenses input.. (2025-09)")
             selected_month = st.text_input("Enter Year-MM(YYYY-MM)")
@@ -142,14 +160,16 @@ elif st.session_state.logged_in:
                         t_amount, lim_amount = db.fetch_month_budget(st.session_state.username, selected_month)
                         sp_amount = df1["amount"].sum()
 
-                        col1, col2, col3 = st.columns(3)
+                        col1, col2, col3, col4 = st.columns(4)
                         with col1:
                             st.metric(label = f"Budget for {selected_month}", value = f"Rs. {t_amount:,.0f}")
 
                         with col2:
+                            st.metric(label="Budget Limit", value = f"Rs. {lim_amount:,.0f}")
+                        with col3:
                             st.metric(label = "Remaining Amount", value = f"Rs. {t_amount-sp_amount:,.0f}")
 
-                        with col3:
+                        with col4:
                             st.metric(label = "Total Amount spent..",value = f"Rs. {sp_amount:,.0f}")
 
                         st.divider()
