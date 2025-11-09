@@ -90,7 +90,7 @@ elif st.session_state.logged_in:
                 st.warning("Enter correct format in the YYYY-MM field")
     
     elif action == "View Budgets":
-        st.subheader(f"Allocated Budget of {st.session_state.username} for months")
+        st.subheader(f"Allocated Budget for months by {st.session_state.username}")
         if st.button("View Budget", type="primary"):
             budgets = db.fetch_budgets(st.session_state.username)
             if budgets:
